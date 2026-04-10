@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bài Tập Đọc Hiểu: 黄鼠狼给鸡拜年</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      /* Custom Styles for better UI/UX */
+      body {
+        background-color: #faf8f5; /* Warm neutral background */
+        color: #333;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        scroll-behavior: smooth;
+      }
+
+      /* Chart Container Requirements */
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 300px;
+        max-height: 400px;
+      }
+
+      /* Interactive Elements */
+      .option-card {
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+      }
+      .option-card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      .option-card.selected {
+        border-color: #d97757; /* Warm terracotta accent */
+        background-color: #fdf2ee;
+        font-weight: 600;
+      }
+
+      .fib-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.7em top 50%;
+        background-size: 0.65em auto;
+      }
+
+      .correct-answer {
+        border-color: #10b981 !important;
+        background-color: #d1fae5 !important;
+      }
+      .wrong-answer {
+        border-color: #ef4444 !important;
+        background-color: #fee2e2 !important;
+      }
+
+      /* Hide scrollbar for clean look */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+      }
+    </style>
+  </head>
+  <body class="antialiased pb-20">
+    <!-- Chosen Palette: Warm Neutrals with Terracotta Accent (#faf8f5 background, #d97757 primary accent, #333 text) -->
+
+    <!-- Application Structure Plan: 
+         - A unified, linear interactive quiz layout replacing the static markdown file.
+         - Top section: Introduction and context setting.
+         - Middle section: Interactive Multiple Choice (using clickable cards for better UX than radio buttons) and Fill-in-the-blanks (inline dropdowns).
+         - Bottom section: Floating action button to submit.
+         - Results section (Hidden initially): Replaces the quiz view upon submission, providing immediate feedback, score, a visual Donut Chart (Chart.js) of correct/incorrect ratio, and highlighted answers to facilitate learning and review. 
+         - Reason: Transforms a passive reading task into an active learning experience with immediate evaluation. -->
+
+    <!-- Visualization & Content Choices: 
+         - Multiple Choice -> Clickable Cards -> Enhance touch target size and interactivity on mobile. No SVG used.
+         - Fill in blanks -> Inline Dropdowns -> Natural reading flow while actively selecting words. No SVG used.
+         - Results -> Donut Chart (Chart.js) -> Quick visual synthesis of performance (Correct vs Incorrect). 
+         - Icons -> Unicode Emojis (🦊, 🐔, ✅, ❌) -> Adhere to NO SVG rule while maintaining visual engagement. -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Header Section -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+      <div
+        class="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between"
+      >
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
+            🦊 黄鼠狼给鸡拜年 🐔
+          </h1>
+          <p class="text-sm text-gray-500">
+            Bài Tập Đọc Hiểu Truyện Tranh (HSK 1 - HSK 3)
+          </p>
+        </div>
+        <div class="hidden sm:block text-right">
+          <span id="progress-text" class="text-sm font-medium text-[#d97757]"
+            >0 / 15 Hoàn thành</span
+          >
+        </div>
+      </div>
+    </header>
+
+    <main
+      class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+      id="quiz-container"
+    >
+      <div
+        class="mb-8 bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+      >
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">
+          🎯 Mục tiêu bài học
+        </h2>
+        <p class="text-gray-600">
+          Ứng dụng này giúp bạn kiểm tra khả năng đọc hiểu nội dung truyện, ôn
+          tập từ vựng và ngữ pháp tiếng Trung trình độ HSK 1 - HSK 3 thông qua
+          câu chuyện ngụ ngôn "Chồn chúc Tết Gà". Hãy chọn đáp án chính xác nhất
+          cho từng phần dưới đây.
+        </p>
+      </div>
+
+      <!-- Section 1: Multiple Choice -->
+      <section id="section-mcq" class="mb-12">
+        <h2
+          class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-[#d97757] pb-2 inline-block"
+        >
+          Phần 1: Trắc Nghiệm
+        </h2>
+        <p class="text-gray-600 mb-6 italic">
+          Chọn đáp án đúng nhất dựa vào nội dung câu chuyện.
+        </p>
+        <div id="mcq-content" class="space-y-8">
+          <!-- JS will populate MCQ here -->
+        </div>
+      </section>
+
+      <!-- Section 2: Fill in the gaps -->
+      <section id="section-fib" class="mb-12">
+        <h2
+          class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-[#d97757] pb-2 inline-block"
+        >
+          Phần 2: Điền Vào Chỗ Trống
+        </h2>
+        <p class="text-gray-600 mb-4 italic">
+          Chọn từ thích hợp trong danh sách để điền vào chỗ trống.
+        </p>
+
+        <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+          <p class="font-semibold text-sm text-gray-700 mb-2">
+            Từ vựng gợi ý (Word Bank):
+          </p>
+          <div
+            class="flex flex-wrap gap-2 text-sm text-[#d97757] font-medium"
+            id="word-bank"
+          >
+            <span
+              class="px-3 py-1 bg-white rounded shadow-sm border border-orange-100"
+              >坏主意 (huài zhǔyì)</span
+            >
+            <span
+              class="px-3 py-1 bg-white rounded shadow-sm border border-orange-100"
+              >平安 (píng'ān)</span
+            >
+            <span
+              class="px-3 py-1 bg-white rounded shadow-sm border border-orange-100"
+              >朋友 (péngyǒu)</span
+            >
+            <span
+              class="px-3 py-1 bg-white rounded shadow-sm border border-orange-100"
+              >红包 (hóngbāo)</span
+            >
+            <span
+              class="px-3 py-1 bg-white rounded shadow-sm border border-orange-100"
+              >礼物 (lǐwù)</span
+            >
+          </div>
+        </div>
+
+        <div
+          id="fib-content"
+          class="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+        >
+          <!-- JS will populate FIB here -->
+        </div>
+      </section>
+
+      <!-- Submit Button -->
+      <div class="text-center mt-8">
+        <button
+          id="submit-btn"
+          class="bg-[#d97757] hover:bg-[#c46142] text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 text-lg w-full sm:w-auto"
+        >
+          Nộp Bài & Xem Kết Quả 🚀
+        </button>
+        <p id="error-msg" class="text-red-500 mt-2 hidden font-medium">
+          Vui lòng trả lời tất cả các câu hỏi trước khi nộp bài!
+        </p>
+      </div>
+    </main>
+
+    <!-- Results Section (Hidden Default) -->
+    <main
+      class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"
+      id="results-container"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center mb-8"
+      >
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">
+          📊 Kết Quả Của Bạn
+        </h2>
+        <p class="text-gray-500 mb-6">
+          Dưới đây là thống kê chi tiết bài làm của bạn.
+        </p>
+
+        <div
+          class="flex flex-col md:flex-row items-center justify-center gap-8"
+        >
+          <!-- Score Display -->
+          <div class="flex-1">
+            <div
+              class="text-6xl font-extrabold text-[#d97757] mb-2"
+              id="final-score-text"
+            >
+              0/15
+            </div>
+            <p class="text-xl font-medium text-gray-700" id="feedback-message">
+              Cố gắng lên nhé!
+            </p>
+          </div>
+
+          <!-- Chart Container -->
+          <div class="flex-1 w-full">
+            <div class="chart-container">
+              <canvas id="resultsChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <button
+          id="retry-btn"
+          class="mt-8 bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-full transition"
+        >
+          🔄 Làm lại bài
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
+          Chi tiết đáp án
+        </h3>
+        <div id="review-content" class="space-y-4">
+          <!-- JS will populate review content here -->
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Data Structure
+      const mcqData = [
+        {
+          id: "q1",
+          question:
+            "Câu 1: Câu chuyện xảy ra vào thời gian nào? (故事发生在什么时间？)",
+          options: [
+            "A. 早上 (Zǎoshang)",
+            "B. 中秋节 (Zhōngqiū jié)",
+            "C. 除夕夜 (Chúxī yè)",
+            "D. 春天 (Chūntiān)",
+          ],
+          answerIndex: 2,
+        },
+        {
+          id: "q2",
+          question:
+            "Câu 2: Hoàng Thử Lang (Chồn) mang theo những gì đến nhà Gà? (黄鼠狼拿着什么来到鸡家？)",
+          options: [
+            "A. 苹果和水 (Píngguǒ hé shuǐ)",
+            "B. 桃花和红包 (Táohuā hé hóngbāo)",
+            "C. 衣服和鞋 (Yīfu hé xié)",
+            "D. 鸡肉和米 (Jīròu hé mǐ)",
+          ],
+          answerIndex: 1,
+        },
+        {
+          id: "q3",
+          question: "Câu 3: Chồn nói gì khi gặp Gà? (黄鼠狼见到鸡时说了什么？)",
+          options: [
+            "A. 晚上好！ (Wǎnshàng hǎo!)",
+            "B. 对不起！ (Duìbùqǐ!)",
+            "C. 恭喜发财！新年快乐！ (Gōngxǐ fācái! Xīnnián kuàilè!)",
+            "D. 谢谢你！ (Xièxiè nǐ!)",
+          ],
+          answerIndex: 2,
+        },
+        {
+          id: "q4",
+          question:
+            "Câu 4: Chồn có thực sự muốn chúc Tết Gà không? (黄鼠狼真的想给鸡拜年吗？)",
+          options: [
+            "A. 是的，它是好朋友 (Shì de, tā shì hǎo péngyǒu)",
+            "B. 不是，它有坏主意 (Bú shì, tā yǒu huài zhǔyì)",
+            "C. 它只是想聊天 (Tā zhǐshì xiǎng liáotiān)",
+            "D. 它来借钱 (Tā lái jiè qián)",
+          ],
+          answerIndex: 1,
+        },
+        {
+          id: "q5",
+          question:
+            "Câu 5: Gà đã phản ứng thế nào khi thấy Chồn? (看到黄鼠狼，鸡是什么反应？)",
+          options: [
+            "A. 很高兴 (Hěn gāoxìng)",
+            "B. 请它进来吃饭 (Qǐng tā jìnlái chīfàn)",
+            "C. 记得它，问它干什么 (Jìdé tā, wèn tā gàn shénme)",
+            "D. 哭了 (Kū le)",
+          ],
+          answerIndex: 2,
+        },
+        {
+          id: "q6",
+          question:
+            "Câu 6: Tại sao Gà lại sợ và tức giận với Chồn? (qùnián fāshēng le shénme shì?)",
+          options: [
+            "A. 黄鼠狼偷了鸡的钱 (Huángshǔláng tōu le jī de qián)",
+            "B. 黄鼠狼咬死了鸡的朋友 (Huángshǔláng yǎo sǐ le jī de péngyǒu)",
+            "C. 黄鼠狼不给鸡红包 (Huángshǔláng bù gěi jī hóngbāo)",
+            "D. 鸡不喜欢桃花 (Jī bù xǐhuān táohuā)",
+          ],
+          answerIndex: 1,
+        },
+        {
+          id: "q7",
+          question:
+            "Câu 7: Gà có nhận quà của Chồn không? (鸡要了黄鼠狼的礼物吗？)",
+          options: [
+            "A. 接受了 (Jiēshòu le)",
+            "B. 不要，叫它走开 (Bù yào, jiào tā zǒukāi)",
+            "C. 吃掉了 (Chī diào le)",
+            "D. 给别的小鸡了 (Gěi bié de xiǎojī le)",
+          ],
+          answerIndex: 1,
+        },
+        {
+          id: "q8",
+          question:
+            "Câu 8: Khi Gà không nghe lời và không nhận quà, Chồn định làm gì? (鸡不听话时，黄鼠狼想做什么？)",
+          options: [
+            "A. 回家睡觉 (Huí jiā shuìjiào)",
+            "B. 冲进去 (Chōng jìnqù)",
+            "C. 给更多红包 (Gěi gèng duō hóngbāo)",
+            "D. 坐在外面哭 (Zuò zài wàimiàn kū)",
+          ],
+          answerIndex: 1,
+        },
+        {
+          id: "q9",
+          question: "Câu 9: Kết quả vào ngày hôm sau (第二天) như thế nào?",
+          options: [
+            "A. 鸡一家被吃了 (Jī yījiā bèi chī le)",
+            "B. 鸡一家搬家了 (Jī yījiā bānjiā le)",
+            "C. 鸡一家平安快乐 (Jī yījiā píng'ān kuàilè)",
+            "D. 黄鼠狼和鸡成了朋友 (Huángshǔláng hé jī chéng le péngyǒu)",
+          ],
+          answerIndex: 2,
+        },
+        {
+          id: "q10",
+          question: "Câu 10: Câu tục ngữ nào được rút ra từ câu chuyện này?",
+          options: [
+            "A. 守株待兔 (Shǒuzhūdàitù)",
+            "B. 对牛弹琴 (Duìniútánqín)",
+            "C. 狐假虎威 (Hújiǎhǔwēi)",
+            "D. 黄鼠狼给鸡拜年，没安好心 (Huángshǔláng gěi jī bàinián, méi ān hǎoxīn)",
+          ],
+          answerIndex: 3,
+        },
+      ];
+
+      const fibData = [
+        {
+          id: "f1",
+          textBefore: "1. 晚上，黄鼠狼拿着花和 ",
+          textAfter:
+            " 来到鸡的家。 (wǎnshang, huángshǔláng názhe huā hé ___ láidào jī de jiā.)",
+          answer: "红包",
+          options: [
+            "--- Chọn từ ---",
+            "坏主意",
+            "平安",
+            "朋友",
+            "红包",
+            "礼物",
+          ],
+        },
+        {
+          id: "f2",
+          textBefore: "2. 虽然黄鼠狼在笑，但是它心里有 ",
+          textAfter:
+            "。 (suīrán huángshǔláng zài xiào, dànshì tā xīnlǐ yǒu ___.)",
+          answer: "坏主意",
+          options: [
+            "--- Chọn từ ---",
+            "坏主意",
+            "平安",
+            "朋友",
+            "红包",
+            "礼物",
+          ],
+        },
+        {
+          id: "f3",
+          textBefore: "3. 去年，黄鼠狼咬死了大公鸡的 ",
+          textAfter: "。 (qùnián, huángshǔláng yǎo sǐ le dà gōngjī de ___.)",
+          answer: "朋友",
+          options: [
+            "--- Chọn từ ---",
+            "坏主意",
+            "平安",
+            "朋友",
+            "红包",
+            "礼物",
+          ],
+        },
+        {
+          id: "f4",
+          textBefore: "4. 鸡知道黄鼠狼想干什么，所以大声说：“走开！我不要你的 ",
+          textAfter:
+            '！” (jī zhīdào huángshǔláng xiǎng gàn shénme, suǒyǐ dàshēng shuō: "zǒukāi! wǒ bú yào nǐ de ___!")',
+          answer: "礼物",
+          options: [
+            "--- Chọn từ ---",
+            "坏主意",
+            "平安",
+            "朋友",
+            "红包",
+            "礼物",
+          ],
+        },
+        {
+          id: "f5",
+          textBefore:
+            "5. 因为鸡没有上当 (shàngdàng)，所以第二天，它们一家都很 ",
+          textAfter:
+            "。 (yīnwèi jī méiyǒu shàngdàng, suǒyǐ dì èr tiān, tāmen yījiā dōu hěn ___.)",
+          answer: "平安",
+          options: [
+            "--- Chọn từ ---",
+            "坏主意",
+            "平安",
+            "朋友",
+            "红包",
+            "礼物",
+          ],
+        },
+      ];
+
+      // State Management
+      let userAnswers = {};
+      const totalQuestions = mcqData.length + fibData.length;
+      let chartInstance = null;
+
+      // Initialize App
+      document.addEventListener("DOMContentLoaded", () => {
+        renderMCQ();
+        renderFIB();
+        updateProgress();
+
+        document
+          .getElementById("submit-btn")
+          .addEventListener("click", submitQuiz);
+        document
+          .getElementById("retry-btn")
+          .addEventListener("click", resetQuiz);
+      });
+
+      // Render Multiple Choice Questions
+      function renderMCQ() {
+        const container = document.getElementById("mcq-content");
+        container.innerHTML = "";
+
+        mcqData.forEach((q, index) => {
+          const qDiv = document.createElement("div");
+          qDiv.className =
+            "bg-white p-6 rounded-xl shadow-sm border border-gray-100";
+
+          let optionsHtml = q.options
+            .map(
+              (opt, optIndex) => `
+                    <div class="option-card border-2 border-gray-200 rounded-lg p-3 text-gray-700 bg-gray-50" 
+                         data-qid="${q.id}" data-optindex="${optIndex}" onclick="selectMCQ('${q.id}', ${optIndex}, this)">
+                        ${opt}
+                    </div>
+                `,
+            )
+            .join("");
+
+          qDiv.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">${q.question}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="options-${q.id}">
+                        ${optionsHtml}
+                    </div>
+                `;
+          container.appendChild(qDiv);
+        });
+      }
+
+      // Handle MCQ Selection
+      window.selectMCQ = function (questionId, optionIndex, element) {
+        // Update state
+        userAnswers[questionId] = optionIndex;
+
+        // Update UI
+        const optionsContainer = document.getElementById(
+          `options-${questionId}`,
+        );
+        const allOptions = optionsContainer.querySelectorAll(".option-card");
+        allOptions.forEach((opt) => {
+          opt.classList.remove("selected");
+          opt.classList.remove("bg-fdf2ee", "border-[#d97757]"); // Remove custom tailwind active classes
+        });
+
+        element.classList.add("selected");
+        updateProgress();
+      };
+
+      // Render Fill in the Blanks
+      function renderFIB() {
+        const container = document.getElementById("fib-content");
+        container.innerHTML = "";
+
+        fibData.forEach((q, index) => {
+          const qDiv = document.createElement("div");
+          qDiv.className =
+            "text-lg text-gray-800 leading-relaxed pb-4 border-b border-gray-100 last:border-0 last:pb-0";
+
+          let optionsHtml = q.options
+            .map(
+              (opt) =>
+                `<option value="${opt === "--- Chọn từ ---" ? "" : opt}">${opt}</option>`,
+            )
+            .join("");
+
+          qDiv.innerHTML = `
+                    <span>${q.textBefore}</span>
+                    <select class="fib-select bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-md focus:ring-[#d97757] focus:border-[#d97757] px-3 py-1 mx-1 font-semibold text-[#d97757]" 
+                            id="${q.id}" onchange="selectFIB('${q.id}', this.value)">
+                        ${optionsHtml}
+                    </select>
+                    <span>${q.textAfter}</span>
+                `;
+          container.appendChild(qDiv);
+        });
+      }
+
+      // Handle FIB Selection
+      window.selectFIB = function (questionId, value) {
+        if (value) {
+          userAnswers[questionId] = value;
+        } else {
+          delete userAnswers[questionId];
+        }
+        updateProgress();
+      };
+
+      // Update Progress Bar/Text
+      function updateProgress() {
+        const answeredCount = Object.keys(userAnswers).length;
+        document.getElementById("progress-text").innerText =
+          `${answeredCount} / ${totalQuestions} Hoàn thành`;
+        document.getElementById("error-msg").classList.add("hidden");
+      }
+
+      // Submit Quiz Logic
+      function submitQuiz() {
+        const answeredCount = Object.keys(userAnswers).length;
+
+        // Check if all answered
+        if (answeredCount < totalQuestions) {
+          document.getElementById("error-msg").classList.remove("hidden");
+          // Scroll to first unanswered
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+
+        // Calculate Score
+        let score = 0;
+        let reviewHtml = "";
+
+        // Check MCQ
+        mcqData.forEach((q) => {
+          const isCorrect = userAnswers[q.id] === q.answerIndex;
+          if (isCorrect) score++;
+
+          const statusIcon = isCorrect ? "✅" : "❌";
+          const statusColor = isCorrect ? "text-green-600" : "text-red-600";
+          const correctText = q.options[q.answerIndex];
+          const userText = q.options[userAnswers[q.id]];
+
+          reviewHtml += `
+                    <div class="p-4 bg-gray-50 rounded-lg border-l-4 ${isCorrect ? "border-green-500" : "border-red-500"}">
+                        <p class="font-semibold text-gray-800">${q.question}</p>
+                        <p class="text-sm mt-1">Đáp án của bạn: <span class="${statusColor} font-medium">${userText} ${statusIcon}</span></p>
+                        ${!isCorrect ? `<p class="text-sm text-gray-600 mt-1">Đáp án đúng: <span class="font-medium text-green-600">${correctText}</span></p>` : ""}
+                    </div>
+                `;
+        });
+
+        // Check FIB
+        fibData.forEach((q) => {
+          // Extract just the Chinese word for comparison if necessary, but exact match works here based on data
+          const isCorrect = userAnswers[q.id] === q.answer;
+          if (isCorrect) score++;
+
+          const statusIcon = isCorrect ? "✅" : "❌";
+          const statusColor = isCorrect ? "text-green-600" : "text-red-600";
+
+          reviewHtml += `
+                    <div class="p-4 bg-gray-50 rounded-lg border-l-4 ${isCorrect ? "border-green-500" : "border-red-500"}">
+                        <p class="font-semibold text-gray-800">${q.textBefore} <span class="underline border-b-2 border-gray-400 px-2">${q.answer}</span> ${q.textAfter.split("(")[0]}</p>
+                        <p class="text-sm mt-1">Bạn điền: <span class="${statusColor} font-medium">${userAnswers[q.id]} ${statusIcon}</span></p>
+                    </div>
+                `;
+        });
+
+        // Update UI
+        document.getElementById("quiz-container").classList.add("hidden");
+        document.getElementById("results-container").classList.remove("hidden");
+        document.getElementById("final-score-text").innerText =
+          `${score}/${totalQuestions}`;
+
+        // Set feedback msg
+        const feedbackEl = document.getElementById("feedback-message");
+        const percentage = score / totalQuestions;
+        if (percentage === 1) {
+          feedbackEl.innerText = "Tuyệt hảo! Bạn hiểu bài rất tốt! 🏆";
+          feedbackEl.className = "text-xl font-bold text-green-600";
+        } else if (percentage >= 0.7) {
+          feedbackEl.innerText = "Làm tốt lắm! Kiến thức khá vững. 👍";
+          feedbackEl.className = "text-xl font-bold text-blue-600";
+        } else {
+          feedbackEl.innerText = "Cần cố gắng đọc kỹ hơn nhé! 📚";
+          feedbackEl.className = "text-xl font-bold text-orange-600";
+        }
+
+        document.getElementById("review-content").innerHTML = reviewHtml;
+
+        // Draw Chart
+        drawChart(score, totalQuestions - score);
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // Draw Chart.js Donut Chart
+      function drawChart(correct, incorrect) {
+        const ctx = document.getElementById("resultsChart").getContext("2d");
+
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: ["Câu Đúng", "Câu Sai"],
+            datasets: [
+              {
+                data: [correct, incorrect],
+                backgroundColor: [
+                  "#10b981", // Emerald 500
+                  "#ef4444", // Red 500
+                ],
+                hoverBackgroundColor: ["#059669", "#dc2626"],
+                borderWidth: 0,
+                hoverOffset: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {
+                  font: {
+                    family: "'Segoe UI', sans-serif",
+                    size: 14,
+                  },
+                  padding: 20,
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    let label = context.label || "";
+                    if (label) {
+                      label += ": ";
+                    }
+                    if (context.parsed !== null) {
+                      label += context.parsed + " câu";
+                    }
+                    return label;
+                  },
+                },
+              },
+            },
+            cutout: "70%",
+            animation: {
+              animateScale: true,
+              animateRotate: true,
+            },
+          },
+        });
+      }
+
+      // Reset Quiz
+      function resetQuiz() {
+        userAnswers = {};
+
+        // Reset Dropdowns
+        document.querySelectorAll(".fib-select").forEach((select) => {
+          select.value = "";
+        });
+
+        // Re-render MCQ to clear selection classes
+        renderMCQ();
+
+        updateProgress();
+
+        document.getElementById("results-container").classList.add("hidden");
+        document.getElementById("quiz-container").classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    </script>
+  </body>
+</html>
