@@ -1,0 +1,22 @@
+name: Netlify CI Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify Build Hook
+        env:
+          NETLIFY_BUILD_HOOK_URL: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
+        run: |
+          if [ -z "$NETLIFY_BUILD_HOOK_URL" ]; then
+            echo "Missing secret: NETLIFY_BUILD_HOOK_URL"
+            exit 1
+          fi
+          curl -fsS -X POST -H "Content-Type: application/json" -d '{}' "$NETLIFY_BUILD_HOOK_URL"
+          echo "Netlify build hook triggered successfully."
